@@ -58,7 +58,7 @@
     app.saveSelectedCities();
     app.toggleAddDialog(false);
   });
-
+  
   document.getElementById('butAddCancel').addEventListener('click', function() {
     // Close the add new city dialog
     app.toggleAddDialog(false);
@@ -169,7 +169,25 @@
     var url = 'https://query.yahooapis.com/v1/public/yql?format=json&q=' +
         statement;
     // TODO add cache logic here
-
+    if ('caches' in window) {
+        /*
+         * Check if the service worker has already cached this city's weather
+         * data. If the service worker has the data, then display the cached
+         * data while the app fetches the latest data.
+         */
+        caches.match(url).then(function(response) {
+          if (response) {
+            response.json().then(function updateFromCache(json) {
+              var results = json.query.results;
+              results.key = key;
+              results.label = label;
+              results.created = json.query.created;
+              app.updateForecastCard(results);
+            });
+          }
+        });
+      }
+      
     // Fetch the latest data.
     var request = new XMLHttpRequest();
     request.onreadystatechange = function() {
@@ -201,11 +219,11 @@
 
   // TODO add saveSelectedCities function here
     // Save list of cities to localStorage.
-    app.saveSelectedCities = function() {
-    var selectedCities = JSON.stringify(app.selectedCities);
-    localStorage.selectedCities = selectedCities;
-    };
-
+      app.saveSelectedCities = function() {
+        var selectedCities = JSON.stringify(app.selectedCities);
+        localStorage.selectedCities = selectedCities;
+      };
+      
   app.getIconClass = function(weatherCode) {
     // Weather codes: https://developer.yahoo.com/weather/documentation.html#codes
     weatherCode = parseInt(weatherCode);
@@ -311,7 +329,7 @@
     }
   };
   // TODO uncomment line below to test app with fake data
-  //  app.updateForecastCard(initialWeatherForecast);
+  app.updateForecastCard(initialWeatherForecast);
 
   // TODO add startup code here
     /************************************************************************
@@ -345,4 +363,10 @@
       }
       
   // TODO add service worker code here
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker
+                 .register('./service-worker.js')
+                 .then(function() { console.log('Service Worker Registered'); });
+      }
+      
 })();
