@@ -58,6 +58,7 @@ self.addEventListener('fetch', function(e) {
      * network and then caches the response. This is called the "Cache then
      * network" strategy:
      * https://jakearchibald.com/2014/offline-cookbook/#cache-then-network
+     * Just another comment
      */
     e.respondWith(
       caches.open(dataCacheName).then(function(cache) {
